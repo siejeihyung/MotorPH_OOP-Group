@@ -31,27 +31,86 @@
 
 <hr>
 
-<h3>📂 PROJECT STRUCTURE</h3>
+<h1>📂 MOTORPH PROJECT STRUCTURE</h1>
 
+<h3>📦 model (Package)</h3>
+<p>This folder contains the core logic and blueprints of your system.</p>
 <ul>
-<li><b>IPayable.java:</b> Interface for the payment contract.</li>
-<li><b>Employee.java:</b> Abstract base class for shared attributes.</li>
-<li><b>RegularEmployee.java:</b> Concrete class for full-time pay logic.</li>
-<li><b>PayrollLogic.java:</b> The engine for net pay and breakdowns.</li>
-<li><b>Deductions.java:</b> SSS, PhilHealth, Pag-IBIG, and Tax math.</li>
-<li><b>Attendance.java:</b> Lateness and hourly deduction logic.</li>
-<li><b>FileHandler.java:</b> CSV/Text data persistence management.</li>
+<li>
+<b>IPayable.java</b>
+<ul>
+<li>Type: Interface</li>
+<li>Role: Defines the contract for any object that can be paid.</li>
+</ul>
+</li>
+<li>
+<b>Employee.java</b>
+<ul>
+<li>Type: Abstract Class</li>
+<li>Role: The parent template for all employees; implements IPayable.</li>
+</ul>
+</li>
+<li>
+<b>RegularEmployee.java</b>
+<ul>
+<li>Type: Concrete Class</li>
+<li>Role: Extends Employee; contains the specific math for full-time staff.</li>
+</ul>
+</li>
+<li>
+<b>PayrollLogic.java</b>
+<ul>
+<li>Type: Logic Class</li>
+<li>Role: Processes net pay and prints salary breakdowns.</li>
+</ul>
+</li>
+<li>
+<b>Deductions.java</b>
+<ul>
+<li>Type: Calculation Class</li>
+<li>Role: Computes SSS, PhilHealth, Pag-IBIG, and Tax.</li>
+</ul>
+</li>
+<li>
+<b>Benefits.java</b>
+<ul>
+<li>Type: Model Class</li>
+<li>Role: Stores allowance data (Rice, Phone, Clothing).</li>
+</ul>
+</li>
+<li>
+<b>Attendance.java</b>
+<ul>
+<li>Type: Utility Class</li>
+<li>Role: Manages login times and late deductions.</li>
+</ul>
+</li>
+<li>
+<b>FileHandler.java</b>
+<ul>
+<li>Type: Data Class</li>
+<li>Role: Reads and writes to your text/CSV files.</li>
+</ul>
+</li>
+</ul>
+
+<h3>📂 data (Folder)</h3>
+<p>This is where your system stores information outside of the code.</p>
+<ul>
+<li><b>employee.txt</b>: Stores the main employee database.</li>
+<li><b>attendance.txt</b>: Stores daily time logs.</li>
+<li><b>credentials.txt</b>: Stores login usernames and passwords.</li>
 </ul>
 
 <hr>
 
-<h3>📝 RECENT UPDATES</h3>
-
+<h3>✅ SUMMARY OF UPDATES</h3>
 <ul>
-<li><b>Standardized Naming:</b> Synchronized 'calculateGrossPay()' across all interfaces and classes.</li>
-<li><b>Refactored Logic:</b> PayrollLogic now accepts <b>Employee objects</b> instead of multiple double parameters for cleaner code.</li>
-<li><b>Enhanced Security:</b> Fields transitioned to <b>PRIVATE</b> with standard Getters/Setters.</li>
+<li><b>Abstraction:</b> Method names are now synchronized to <b>calculateGrossPay()</b>.</li>
+<li><b>Encapsulation:</b> All fields in Employee.java are now <b>private</b> to protect data.</li>
+<li><b>Polymorphism:</b> PayrollLogic now accepts an <b>Employee object</b> instead of long lists of numbers for better efficiency.</li>
 </ul>
+<ul>
 
 <hr>
 

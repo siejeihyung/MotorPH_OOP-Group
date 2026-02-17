@@ -95,7 +95,7 @@
 </ul>
 
 <h3>📂 data (Folder)</h3>
-<p>This is where your system stores information outside of the code.</p>
+<p>This is where the system stores information outside of the code.</p>
 <ul>
 <li><b>employee.txt</b>: Stores the main employee database.</li>
 <li><b>attendance.txt</b>: Stores daily time logs.</li>

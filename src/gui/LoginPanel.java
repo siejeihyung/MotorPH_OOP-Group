@@ -230,8 +230,9 @@ public class LoginPanel extends JFrame {
         setVisible(true); // Show the frame
         }
 
-        // Method to check login credentials and handle logic
-        private void checkLogin() {
+            // Method to check login credentials and handle logic
+            // Method to check login credentials and handle logic
+    private void checkLogin() {
         String user = usernameField.getText().trim();
         String pass = new String(passwordField.getPassword()).trim();
 
@@ -240,22 +241,35 @@ public class LoginPanel extends JFrame {
         if (fileHandler.authenticateUser(user, pass)) {
             // Successful login
             feedbackLabel.setForeground(new Color(34, 139, 34));
-            feedbackLabel.setText("Login Successful!");
+            feedbackLabel.setText("Login Successfully!");
 
             Timer successTimer = new Timer(1000, e -> {
                 dispose();
                 SwingUtilities.invokeLater(() -> {
+                    // START OF TRY BLOCK
                     try {
-                        new DashboardPanel(user); // Pass username
+                        System.out.println("Attempting to open Dashboard for: "+ user); 
                         
+                        // Role-Based Redirection
+                        if (user.equalsIgnoreCase("Admin")) {
+                            new DashboardPanel("Admin").setVisible(true);
+                        } else {
+                            new EmployeeDashboard(user);
+                            EmployeeDashboard empployeeDashboard = new EmployeeDashboard(user);
+                            System.out.println("DEBUG: Object created, now setting visible..."); // Step 2
+                            empployeeDashboard.setVisible(true); // Double check visibility here
+                            System.out.println("DEBUG: Window should be visible now."); // Step 3
+                        }
                     } catch (Exception ex) {
-                        Logger.getLogger(LoginPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        // FIXED: Changed period to comma after Level.SEVERE
+                        System.out.println("CRASH DETECTED"); 
+                        Logger.getLogger(LoginPanel.class.getName()).log(Level.SEVERE, "Dashboard Load Error", ex);    
                     }
                 });
             });
             successTimer.setRepeats(false);
             successTimer.start();
-
+            
         } else {
             // Failed login attempt
             attempts++;

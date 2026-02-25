@@ -20,6 +20,7 @@ import java.awt.event.MouseEvent;
 
 // Imports the URL class, used for locating resources such as images or files on the web or locally
 import java.net.URL;
+import java.util.Vector;
 
 // Imports the FileHandler class from the 'model' package
 // Typically used for file operations (e.g., reading/writing employee or attendance data)
@@ -36,7 +37,7 @@ public class DashboardPanel extends JFrame {
     private final CardLayout cardLayout = new CardLayout();
 
     // Panel that contains different views (e.g., Employee, Attendance, Payroll)
-    JPanel contentPanel = new JPanel(); 
+    private JPanel contentPanel = new JPanel(); 
 
     // Panels for displaying employee and payroll data
     private final EmployeePanel employeePanel = new EmployeePanel();
@@ -111,6 +112,27 @@ public class DashboardPanel extends JFrame {
         navPanel.add(Box.createVerticalStrut(5));
 //        navPanel.add(payrollBtn);
 
+       // Payslip Button (New Feature)
+        JButton adminPrintBtn = createNavButton("Print Payslip", "printer.png");
+        adminPrintBtn.addActionListener(e -> {
+            EmployeeTable table = (EmployeeTable) employeePanel.getDashboardTable();
+            java.util.Vector<Object> selected = table.getSelectedEmployeeFullDetails();
+
+            if (selected != null) {
+                // Use the new parseMoney helper to avoid the "90,000" crash
+                double gross = parseMoney(selected.get(13));
+                double deductions = 0.0; // Admin placeholder
+                double net = gross - deductions;
+
+                // Open with all 4 required parameters
+                new PayslipFrame(selected, gross, deductions, net);
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select an employee first!");
+            }
+        });
+        navPanel.add(adminPrintBtn);
+        navPanel.add(Box.createVerticalStrut(5));
+
         // Log-out button setup
         JButton logoutButton = createNavButton("Log-out", "logout.png");
         logoutButton.setForeground(Color.GRAY);
@@ -142,11 +164,8 @@ public class DashboardPanel extends JFrame {
         // Add all panels to the card layout
         contentPanel.add(employeePanel, "Employee");
 
-
-      
         employeeBtn.addActionListener(e -> cardLayout.show(contentPanel, "Employee"));
        
-
         // Add sidebar and main content to the frame
         add(sidebar, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -207,6 +226,20 @@ public class DashboardPanel extends JFrame {
         } else {
             System.err.println("Image not found: " + path);
             return null;
+        }  
+    }
+
+    // FIXED: Removed the 'UnsupportedOperationException' stub
+    private double parseMoney(Object value) {
+        if (value == null || value.toString().isEmpty()) {
+            return 0.0;
+        }
+        // Cleans the string so "90,000" becomes "90000" for math
+        String cleanValue = value.toString().replace(",", "").replace("\"", "").trim();
+        try {
+            return Double.parseDouble(cleanValue);
+        } catch (NumberFormatException e) {
+            return 0.0; // Returns zero if the data is totally invalid
         }
     }
 }

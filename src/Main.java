@@ -1,4 +1,4 @@
-// Import the custom DashboardPanel class from the gui package
+ // Import the custom DashboardPanel class from the gui package
 import gui.DashboardPanel;
 
 // Import the custom LoginPanel class from the gui package (currently commented out in use)
@@ -26,9 +26,7 @@ public class Main {
             
             // For now, bypasses login and opens the Dashboard directly with "Admin" user
 //            new DashboardPanel("Admin");
-            LoginPanel LoginPanel = new LoginPanel(); // Launch the login GUI
-          
-
+            LoginPanel LoginPanel = new LoginPanel(); // Launch the login GUI          
         });
     }
 }

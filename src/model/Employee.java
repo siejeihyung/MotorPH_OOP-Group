@@ -1,54 +1,76 @@
 package model;
 
-// This class represents an Employee with relevant salary details
-public class Employee {
+/**
+ * The SINGLE Parent Class for all types of Employees.
+ * Implements IPayable to ensure every employee has a calculation for gross pay.
+ */
 
-    // Employee ID (e.g., unique identifier for each employee)
-    private String employeeID;
+/**
+ *
+ * @author SunnyEljohn
+ */
+// Inside Employee.java
 
-    // Full name of the employee
-    private String name;
+public abstract class Employee implements IPayable {
 
-    // Basic monthly salary of the employee
-    private double basicSalary;
+    // 1. Identity Fields: Protected so subclasses can access them directly
+    protected String employeeID;
+    protected String lastName;
+    protected String firstName;
+    protected String sss;
+    protected String philhealth;
+    protected String tin;
+    protected String pagibig;
 
-    // Semi-monthly salary rate (used if paid twice a month)
-    private double semiMonthlyRate;
+    // 2. Salary Fields: Common to all employee types
+    protected double basicSalary;
+    protected double semiMonthlyRate;
+    protected double hourlyRate;
+    protected double totalBenefits;
 
-    // Hourly rate used for computing pay based on hours worked
-    private double hourlyRate;
-
-    // Constructor to initialize all attributes of the Employee object
-    public Employee(String employeeID, String name, double basicSalary, double semiMonthlyRate, double hourlyRate) {
+    // 3. Merged Constructor: Initializes the common state of any employee
+    public Employee(String employeeID, String lastName, String firstName, 
+                    double basicSalary, double semiMonthlyRate, double hourlyRate, double totalBenefits) {
         this.employeeID = employeeID;
-        this.name = name;
+        this.lastName = lastName;
+        this.firstName = firstName;
         this.basicSalary = basicSalary;
         this.semiMonthlyRate = semiMonthlyRate;
         this.hourlyRate = hourlyRate;
+        this.totalBenefits = totalBenefits;
+    }
+   
+    // 5. GETTERS: Controlled way to read data
+    public String getEmployeeID() { return employeeID; }
+    public String getLastName() { return lastName; }
+    public String getFirstName() { return firstName; }
+    public String getFullName() { return firstName + " " + lastName; }
+    
+    public double getBasicSalary() { return basicSalary; } // Common Concrete Methods: Standard logic used by all subclasses
+    public double getSemiMonthlyRate() { return semiMonthlyRate; }
+    public double getHourlyRate() { return hourlyRate; }
+    public double getTotalBenefits() { return totalBenefits; } // Common Concrete Methods: Standard logic used by all subclasses
+    
+    // 6. SETTERS: Controlled way to update data with validation logic
+    public void setBasicSalary(double basicSalary) {
+        if (basicSalary > 0) { // Example validation
+            this.basicSalary = basicSalary;
+        }
     }
 
-    // Getter method to retrieve employee ID
-    public String getEmployeeID() {
-        return employeeID;
+    public void setLastName(String lastName) {
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            this.lastName = lastName;
+        }
     }
 
-    // Getter method to retrieve employee name
-    public String getName() {
-        return name;
+    public void setTotalBenefits(double totalBenefits) {
+        this.totalBenefits = totalBenefits;
     }
 
-    // Getter method to retrieve the basic salary
-    public double getBasicSalary() {
-        return basicSalary;
-    }
-
-    // Getter method to retrieve the semi-monthly rate
-    public double getSemiMonthlyRate() {
-        return semiMonthlyRate;
-    }
-
-    // Getter method to retrieve the hourly rate
-    public double getHourlyRate() {
-        return hourlyRate;
-    }
+    // 7. The Abstract Method: This is the OOP Abstraction
+    // Subclasses like regularEmployee MUST implement these
+    // Differently than a "Regular" employee.
+    @Override
+    public abstract double calculateGrossPay();
 }

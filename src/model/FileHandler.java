@@ -78,27 +78,43 @@ public class FileHandler {
     }
     
     public boolean authenticateUser(String username, String password) {
+        // Admin Credentials Logic (from credentials.txt)
         try (BufferedReader reader = new BufferedReader(new FileReader(credentialsFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.trim().split(",");
                 if (parts.length == 2) {
-                    String storedUsername = parts[0].trim();
-                    String storedPassword = parts[1].trim();
-
-                    if (storedUsername.equals(username) && storedPassword.equals(password)) {
-                        return true; // Match found
+                    if (parts[0].trim().equals(username) && parts[1].trim().equals(password)) {
+                        return true; // admin match found
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error reading credentials file: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
+        
+        // Employee CSV (if admin check failed)
+        // This part allows employee to use ID as udername and Last name as passwords 
+            readEmployeeFile();
+            
+        if (employeeData != null){
+            for (String[] employee : employeeData) {
+                if (employee.length > 1){
+                String employeeId = employee[0].trim();
+                String lastName = employee[1].trim(); // Using Last Name as Password
 
-        return false; // No match
+                // check if username matches ID and password matches Last name
+                if (employeeId.equals(username) && lastName.equalsIgnoreCase(password)) {
+                    System.out.println("Loggin in: " + lastName);
+                    return true;
+            }
+        }
     }
-
-
+}       
+        System.out.println("No match found for: " + username);
+        return false; // No match
+}
+        
     // Reads and parses the attendance file using OpenCSV
     public void readAttendanceFile() {
         File file = new File(ATTENDANCE_FILE);

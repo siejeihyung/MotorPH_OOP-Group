@@ -279,6 +279,7 @@ public class EmployeeTable extends JPanel {
         int modelRow = table.convertRowIndexToModel(selectedRow);
         String employeeId = (String) table.getModel().getValueAt(modelRow, 0);
 
+        // Look through the file data to get all columns (not just the ones in the table)
         for (String[] employee : employeeData) {
             if (employee.length > 0 && employee[0].equals(employeeId)) {
                 Vector<Object> fullData = new Vector<>();
@@ -288,7 +289,6 @@ public class EmployeeTable extends JPanel {
                 return fullData;
             }
         }
-
         return null;
     }
 

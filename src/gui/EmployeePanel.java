@@ -30,7 +30,6 @@ public class EmployeePanel extends JPanel {
     private final FileHandler fileHandler;
     // Declares an EmployeeTable to display employee data
     private final EmployeeTable dashboardTable;
-    private Object table;
     
     
     
@@ -373,27 +372,15 @@ public class EmployeePanel extends JPanel {
 
     // Displays full employee details in a new panel
     private void showSelectedEmployeeDetails() {
-     // 1. Get the selected employee's full data from the table
-     Vector<Object> selectedEmployee = dashboardTable.getSelectedEmployeeFullDetails();
+        Vector<Object> selected = dashboardTable.getSelectedEmployeeFullDetails();
+        if (selected == null || selected.isEmpty()) {
+            showCustomMessage("Please select an employee first.", "Message");
+            return;
+        }
+       
 
-     if (selectedEmployee != null) {
-         // 2. Create a new window (JFrame) to hold the details
-         JFrame detailFrame = new JFrame("Employee Information - " + selectedEmployee.get(0));
-         detailFrame.setSize(1000, 700);
-         detailFrame.setLocationRelativeTo(null);
-         detailFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-         // 3. Add the ViewEmployeePanel to this frame
-         ViewEmployeePanel detailPanel = new ViewEmployeePanel(selectedEmployee);
-         detailFrame.add(detailPanel);
-
-         // 4. Show the window
-         detailFrame.setVisible(true);
-     } else {
-         // Warning if no row is clicked
-         JOptionPane.showMessageDialog(this, "Please select an employee from the table first.", "No Selection", JOptionPane.WARNING_MESSAGE);
-     }
- }
+        new ViewEmployeePanel(selected);// Opens a new window showing employee details
+        }
         private void showCustomMessage(String message, String title) {
         JDialog customDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), title, true);
         customDialog.setSize(400, 260);
@@ -529,12 +516,4 @@ public class EmployeePanel extends JPanel {
         g2d.setPaint(new GradientPaint(0, 0, gradientStart, 0, getHeight(), gradientEnd));
         g2d.fillRect(0, 0, getWidth(), getHeight());
     }
-    // REPLACING THE BROKEN METHOD AT THE BOTTOM
-    public EmployeeTable getDashboardTable() {
-        return this.dashboardTable; 
-    }
 }
- //   Object getDashboardTable() {
- //       return this.dashboardTable; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
- //   }
-// }

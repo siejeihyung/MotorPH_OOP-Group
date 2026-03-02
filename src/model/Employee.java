@@ -1,76 +1,68 @@
 package model;
 
-/**
- * The SINGLE Parent Class for all types of Employees.
- * Implements IPayable to ensure every employee has a calculation for gross pay.
- */
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- * @author SunnyEljohn
- */
-// Inside Employee.java
+// This class represents an Employee with relevant salary details
+public abstract class Employee {
 
-public abstract class Employee implements IPayable {
+    // Employee ID (e.g., unique identifier for each employee)
+    private String employeeID;
 
-    // 1. Identity Fields: Protected so subclasses can access them directly
-    protected String employeeID;
-    protected String lastName;
-    protected String firstName;
-    protected String sss;
-    protected String philhealth;
-    protected String tin;
-    protected String pagibig;
+    // Full name of the employee
+    private String name;
+    
+    // Leave
+    private List<Leave> leaveHistory;
+    private int sickLeaveBalance = 5;      // Default 5 days
+    private int vacationLeaveBalance = 10; // Default 10 days
+    private int emergencyLeaveBalance = 3; // Default 3 days
 
-    // 2. Salary Fields: Common to all employee types
-    protected double basicSalary;
-    protected double semiMonthlyRate;
-    protected double hourlyRate;
-    protected double totalBenefits;
+    // Basic monthly salary of the employee
+    private double basicSalary;
 
-    // 3. Merged Constructor: Initializes the common state of any employee
-    public Employee(String employeeID, String lastName, String firstName, 
-                    double basicSalary, double semiMonthlyRate, double hourlyRate, double totalBenefits) {
+    // Semi-monthly salary rate (used if paid twice a month)
+    private double semiMonthlyRate;
+
+    // Hourly rate used for computing pay based on hours worked
+    private double hourlyRate;
+    
+    // Leave Request
+    private int leavesTaken;
+
+    // Constructor to initialize all attributes of the Employee object
+    public Employee(String employeeID, String name) {
         this.employeeID = employeeID;
-        this.lastName = lastName;
-        this.firstName = firstName;
-        this.basicSalary = basicSalary;
-        this.semiMonthlyRate = semiMonthlyRate;
-        this.hourlyRate = hourlyRate;
-        this.totalBenefits = totalBenefits;
+        this.name = name;
+        this.leaveHistory = new ArrayList<>(); 
     }
-   
-    // 5. GETTERS: Controlled way to read data
+    
+    public abstract double calculateGrossWeeklySalary();
+    
+    // Add the leave object to the list
+    public void fileLeave(Leave leave) {
+        this.leaveHistory.add(leave);
+    }
+
+    // to count total days taken
+    public int getTotalLeavesTaken() {
+        int total = 0;
+        for (Leave l : leaveHistory) {
+            total += l.getDays();
+        }
+        return total;
+    }
+
+    
+    public int getSickLeaveBalance() { return sickLeaveBalance; }
+    public void setSickLeaveBalance(int balance) { this.sickLeaveBalance = balance; }
+    public int getVacationLeaveBalance() { return vacationLeaveBalance; }
+    public void setVacationLeaveBalance(int balance) { this.vacationLeaveBalance = balance; }
+    public int getEmergencyLeaveBalance() { return emergencyLeaveBalance; }
+    public void setEmergencyLeaveBalance(int balance) { this.emergencyLeaveBalance = balance; }
+    
+    // Getters
     public String getEmployeeID() { return employeeID; }
-    public String getLastName() { return lastName; }
-    public String getFirstName() { return firstName; }
-    public String getFullName() { return firstName + " " + lastName; }
-    
-    public double getBasicSalary() { return basicSalary; } // Common Concrete Methods: Standard logic used by all subclasses
-    public double getSemiMonthlyRate() { return semiMonthlyRate; }
-    public double getHourlyRate() { return hourlyRate; }
-    public double getTotalBenefits() { return totalBenefits; } // Common Concrete Methods: Standard logic used by all subclasses
-    
-    // 6. SETTERS: Controlled way to update data with validation logic
-    public void setBasicSalary(double basicSalary) {
-        if (basicSalary > 0) { // Example validation
-            this.basicSalary = basicSalary;
-        }
-    }
-
-    public void setLastName(String lastName) {
-        if (lastName != null && !lastName.trim().isEmpty()) {
-            this.lastName = lastName;
-        }
-    }
-
-    public void setTotalBenefits(double totalBenefits) {
-        this.totalBenefits = totalBenefits;
-    }
-
-    // 7. The Abstract Method: This is the OOP Abstraction
-    // Subclasses like regularEmployee MUST implement these
-    // Differently than a "Regular" employee.
-    @Override
-    public abstract double calculateGrossPay();
+    public String getName() { return name; }
+    public List<Leave> getLeaveHistory() { return leaveHistory; }
 }

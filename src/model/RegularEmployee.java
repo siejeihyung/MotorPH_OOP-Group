@@ -2,28 +2,45 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-/**
- * MotorPH Regular Employee Subclass
- */
 package model;
 
 /**
- * MotorPH Regular Employee Subclass
+ *
+ * @author antongalfo
  */
 public class RegularEmployee extends Employee {
 
-    public RegularEmployee(String employeeID, String lastName, String firstName, 
-                           double basicSalary, double semiMonthlyRate, 
-                           double hourlyRate, double totalBenefits) {
-        
-        super(employeeID, lastName, firstName, basicSalary, semiMonthlyRate, hourlyRate, totalBenefits);
+    private double basicSalary;
+    private double semiMonthlyRate;
+    private double hourlyRate;
+
+    public RegularEmployee(String employeeID, String name, double basicSalary, double semiMonthlyRate, double hourlyRate1) {
+        // 1. Send ID and Name up to the parent (Employee)
+        super(employeeID, name);
+        // specific salary details here
+        this.basicSalary = basicSalary;
+        this.semiMonthlyRate = semiMonthlyRate;
+        this.hourlyRate = hourlyRate;
+          
     }
-    
-    // Regular employees get basic salary + fixed benefits
-    // Adding this to satisfy the Employee abstract class if it still uses calculateGross
+    // 2. OVERLOADED CONSTRUCTOR
+    public RegularEmployee(String employeeID, String name) {
+        super(employeeID, name);
+        // Set default values
+        this.basicSalary = 0.0;
+        this.semiMonthlyRate = 0.0;
+        this.hourlyRate = 0.0;
+    }
+
     @Override
-    public double calculateGrossPay() {
-        // Regular employees get basic salary + fixed benefits
-        return getBasicSalary() + getTotalBenefits();
+    public double calculateGrossWeeklySalary() {
+        // logic: (Monthly Salary / 4)
+        // can adjust this math
+        return basicSalary / 4;
     }
+
+    // Getters
+    public double getBasicSalary() { return basicSalary; }
+    public double getSemiMonthlyRate() { return semiMonthlyRate; }
+    public double getHourlyRate() { return hourlyRate; }
 }

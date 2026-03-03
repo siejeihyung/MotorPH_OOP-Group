@@ -34,7 +34,8 @@ public class FileHandler {
     // File paths
     private final String EMPLOYEE_FILE = folderPath + "/employee.txt";
     private final String ATTENDANCE_FILE = folderPath + "/attendance.txt";
-
+    private final String LEAVE_FILE = folderPath + "/leave.txt";
+    private final List<String[]> leaveData = new ArrayList<>();
     // ======== Read Methods ========
 
     // Reads and parses the employee file, storing headers and data
@@ -422,6 +423,61 @@ public class FileHandler {
         
         return employeeList;
     }
-    
-  
+
+     public void readLeaveFile() {
+        leaveData.clear();
+        File file = new File(LEAVE_FILE);
+        if (!file.exists()) { return; }
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                leaveData.add(line.split(",", -1));
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading leave.txt: " + e.getMessage());
+        }
+    }
+
+    public void writeLeaveFile(List<String[]> data) {
+        try (ICSVWriter writer = new CSVWriterBuilder(new FileWriter(LEAVE_FILE))
+                .withSeparator(',').withQuoteChar(CSVWriter.NO_QUOTE_CHARACTER).build()) {
+            for (String[] row : data) writer.writeNext(row);
+        } catch (IOException e) {
+            System.out.println("Error writing leave.txt: " + e.getMessage());
+        }
+    }
+
+    public boolean appendLeave(String[] leaveRow) {
+        new File(folderPath).mkdirs();
+        try (ICSVWriter writer = new CSVWriterBuilder(new FileWriter(LEAVE_FILE, true))
+                .withSeparator(',').withQuoteChar(CSVWriter.NO_QUOTE_CHARACTER).build()) {
+            writer.writeNext(leaveRow);
+            leaveData.add(leaveRow);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public boolean updateLeaveStatus(String leaveID, String newStatus) {
+        for (String[] row : leaveData) {
+            if (row.length > 1 && row[1].equals(leaveID)) {
+                row[6] = newStatus;
+                writeLeaveFile(leaveData);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<String[]> getLeavesByEmployeeId(String employeeId) {
+        List<String[]> result = new ArrayList<>();
+        for (String[] row : leaveData)
+            if (row.length > 0 && row[0].equals(employeeId)) result.add(row);
+        return result;
+    }
+
+    public List<String[]> getAllLeaveData() { return leaveData; }
+
 }

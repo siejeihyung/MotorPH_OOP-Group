@@ -34,8 +34,7 @@ public class FileHandler {
     // File paths
     private final String EMPLOYEE_FILE = folderPath + "/employee.txt";
     private final String ATTENDANCE_FILE = folderPath + "/attendance.txt";
-    private final String LEAVE_FILE = folderPath + "/leave.txt";
-    private final List<String[]> leaveData = new ArrayList<>();
+
     // ======== Read Methods ========
 
     // Reads and parses the employee file, storing headers and data
@@ -79,27 +78,43 @@ public class FileHandler {
     }
     
     public boolean authenticateUser(String username, String password) {
+        // Admin Credentials Logic (from credentials.txt)
         try (BufferedReader reader = new BufferedReader(new FileReader(credentialsFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.trim().split(",");
                 if (parts.length == 2) {
-                    String storedUsername = parts[0].trim();
-                    String storedPassword = parts[1].trim();
-
-                    if (storedUsername.equals(username) && storedPassword.equals(password)) {
-                        return true; // Match found
+                    if (parts[0].trim().equals(username) && parts[1].trim().equals(password)) {
+                        return true; // admin match found
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error reading credentials file: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
+        
+        // Employee CSV (if admin check failed)
+        // This part allows employee to use ID as udername and Last name as passwords 
+            readEmployeeFile();
+            
+        if (employeeData != null){
+            for (String[] employee : employeeData) {
+                if (employee.length > 1){
+                String employeeId = employee[0].trim();
+                String lastName = employee[1].trim(); // Using Last Name as Password
 
-        return false; // No match
+                // check if username matches ID and password matches Last name
+                if (employeeId.equals(username) && lastName.equalsIgnoreCase(password)) {
+                    System.out.println("Loggin in: " + lastName);
+                    return true;
+            }
+        }
     }
-
-
+}       
+        System.out.println("No match found for: " + username);
+        return false; // No match
+}
+        
     // Reads and parses the attendance file using OpenCSV
     public void readAttendanceFile() {
         File file = new File(ATTENDANCE_FILE);
@@ -399,85 +414,6 @@ public class FileHandler {
         return users;
     }
 
-    // ======== Polymorphism Integration ========
-
-    public List<Employee> getEmployeesAsObjects() {
-        List<Employee> employeeList = new ArrayList<>();
-
-        for (String[] row : employeeData) {
-            
-            // 1. Extract the ID and Name
-            String id = row[0];
-            String name = row[2] + " " + row[1]; 
-
-            // 2. Parse the salary numbers
-            double basicSalary = safeParseDouble(row[13], 0.0);
-            double semiMonthlyRate = safeParseDouble(row[17], 0.0);
-            double hourlyRate = safeParseDouble(row[18], 0.0);
-
-            // 3. Polymorphic Object
-            Employee emp = new RegularEmployee(id, name, basicSalary, semiMonthlyRate, hourlyRate);
-            
-            employeeList.add(emp);
-        }
-        
-        return employeeList;
-    }
-
-     public void readLeaveFile() {
-        leaveData.clear();
-        File file = new File(LEAVE_FILE);
-        if (!file.exists()) { return; }
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                leaveData.add(line.split(",", -1));
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading leave.txt: " + e.getMessage());
-        }
-    }
-
-    public void writeLeaveFile(List<String[]> data) {
-        try (ICSVWriter writer = new CSVWriterBuilder(new FileWriter(LEAVE_FILE))
-                .withSeparator(',').withQuoteChar(CSVWriter.NO_QUOTE_CHARACTER).build()) {
-            for (String[] row : data) writer.writeNext(row);
-        } catch (IOException e) {
-            System.out.println("Error writing leave.txt: " + e.getMessage());
-        }
-    }
-
-    public boolean appendLeave(String[] leaveRow) {
-        new File(folderPath).mkdirs();
-        try (ICSVWriter writer = new CSVWriterBuilder(new FileWriter(LEAVE_FILE, true))
-                .withSeparator(',').withQuoteChar(CSVWriter.NO_QUOTE_CHARACTER).build()) {
-            writer.writeNext(leaveRow);
-            leaveData.add(leaveRow);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    public boolean updateLeaveStatus(String leaveID, String newStatus) {
-        for (String[] row : leaveData) {
-            if (row.length > 1 && row[1].equals(leaveID)) {
-                row[6] = newStatus;
-                writeLeaveFile(leaveData);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public List<String[]> getLeavesByEmployeeId(String employeeId) {
-        List<String[]> result = new ArrayList<>();
-        for (String[] row : leaveData)
-            if (row.length > 0 && row[0].equals(employeeId)) result.add(row);
-        return result;
-    }
-
-    public List<String[]> getAllLeaveData() { return leaveData; }
-
+    
+  
 }

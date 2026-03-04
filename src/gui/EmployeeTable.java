@@ -56,8 +56,8 @@ public class EmployeeTable extends JPanel {
     private final int[] indices = {0, 1, 2, 6, 7, 8, 9};
 
     // Gradient background colors
-    private final Color gradientStart = new Color(255, 204, 229);
-    private final Color gradientEnd = new Color(255, 229, 180);
+    private final Color gradientStart = new Color(29, 69, 143); 
+    private final Color gradientEnd = new Color(29, 69, 143);
 
     public EmployeeTable(FileHandler fileHandler) {
         this.fileHandler = fileHandler;
@@ -279,6 +279,7 @@ public class EmployeeTable extends JPanel {
         int modelRow = table.convertRowIndexToModel(selectedRow);
         String employeeId = (String) table.getModel().getValueAt(modelRow, 0);
 
+        // Look through the file data to get all columns (not just the ones in the table)
         for (String[] employee : employeeData) {
             if (employee.length > 0 && employee[0].equals(employeeId)) {
                 Vector<Object> fullData = new Vector<>();
@@ -288,7 +289,6 @@ public class EmployeeTable extends JPanel {
                 return fullData;
             }
         }
-
         return null;
     }
 

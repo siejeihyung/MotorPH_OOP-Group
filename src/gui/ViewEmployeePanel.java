@@ -1,5 +1,7 @@
 package gui;
 
+import model.PayrollLogic;
+import model.Deductions;
 import model.*;
 
 import javax.swing.*;
@@ -13,19 +15,23 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.Vector;
+import model.PayrollLogic;
 
-public class ViewEmployeePanel extends JFrame {
+public class ViewEmployeePanel extends JPanel {
 
     private static final Font UI_FONT = new Font("Segoe UI", Font.PLAIN, 14);
     private static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 16);
     private static final Color GRADIENT_START = new Color(255, 204, 229);
     private static final Color GRADIENT_END = new Color(255, 229, 180);
+    
+    public JPanel getContentPane() {
+    return this; 
+}
 
     public ViewEmployeePanel(Vector<Object> employeeData) {
-        setTitle("Employee Details");
-        setSize(1000, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         // ===== LEFT PANEL =====
         JPanel leftPanel = new JPanel(new GridBagLayout()) {
@@ -116,6 +122,29 @@ public class ViewEmployeePanel extends JFrame {
                 return c;
             }
         });
+        
+        // Bottom panel to hold the Back button
+        JPanel navigationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        navigationPanel.setOpaque(false);
+        navigationPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        JButton backBtn = new JButton("← Back to Dashboard");
+        // Re-using your styling logic
+        backBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        backBtn.setFocusPainted(false);
+        backBtn.setContentAreaFilled(false);
+        backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Action: Find the window holding this panel and close it
+        backBtn.addActionListener(e -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window != null) {
+                window.dispose();
+            }
+        });
+
+        navigationPanel.add(backBtn);
+        add(navigationPanel, BorderLayout.SOUTH);
 
         JButton submitButton = new JButton("Compute");
         submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Bold font
@@ -218,7 +247,7 @@ public class ViewEmployeePanel extends JFrame {
                         <html>
                         <body style='font-family:Calibri; font-size:11px;'>
                         <pre>
-                    <span style='font-size:16px; font-weight:bold;'>===== WEEKLY SALARY REPORT =====</span>
+                    <span style='font-size:16px; font-weight:bold;'>===== SALARY REPORT =====</span>
 
                     <b>BENEFITS:</b>
                     • Rice Subsidy: ₱%,.2f
@@ -259,15 +288,18 @@ public class ViewEmployeePanel extends JFrame {
                 JOptionPane.showMessageDialog(this, "Calculation error: " + ex.getMessage());
             }
         });
-
+        
+        // === wrapper ===
+        // combines left infor and right payroll panels into spil view
         // ===== SPLIT PANE =====
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contentScrollPane, rightPanel);
         splitPane.setResizeWeight(0.5);
         splitPane.setDividerLocation(0.5);
         splitPane.setOneTouchExpandable(true);
         add(splitPane);
-
+        add(splitPane, BorderLayout.CENTER);
         setVisible(true);
+        
     }
 
     private double safeParseDouble(String value) {
@@ -327,5 +359,11 @@ public class ViewEmployeePanel extends JFrame {
                 return new Dimension(8, 30);
             }
         };
-    }
+    }        
 }
+
+//    private void setLocationRelativeTo(Object object) {
+//       throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+//   }
+
+  

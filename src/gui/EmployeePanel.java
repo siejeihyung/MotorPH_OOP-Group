@@ -19,10 +19,9 @@ import javax.swing.table.DefaultTableModel;
 // Class declaration for the EmployeePanel GUI component
 public class EmployeePanel extends JPanel {
 
-    // Defines the start color of the background gradient
-    private final Color gradientStart = new Color(255, 204, 229);
-    // Defines the end color of the background gradient
-    private final Color gradientEnd = new Color(255, 229, 180);
+   private final Color gradientStart; // Your MotorPH Blue
+    // Your MotorPH Blue
+   private final Color gradientEnd = new Color(20, 50, 110);   // A slightly darker blue
 
     // Declares a search input field with a fixed column width of 20
 //    private final JTextField searchField = new JTextField(20);
@@ -30,11 +29,14 @@ public class EmployeePanel extends JPanel {
     private final FileHandler fileHandler;
     // Declares an EmployeeTable to display employee data
     private final EmployeeTable dashboardTable;
+    private Object table;
     
     
     
     // Constructor for the EmployeePanel class
     public EmployeePanel() {
+        this.gradientStart = new Color(29, 69, 143);
+        this.setBackground(Color.BLUE); // To see if this layer is even the one causing the pink
         // Sets the layout of this panel to BorderLayout
         setLayout(new BorderLayout());
         // Makes this panel transparent (for gradient background)
@@ -372,15 +374,27 @@ public class EmployeePanel extends JPanel {
 
     // Displays full employee details in a new panel
     private void showSelectedEmployeeDetails() {
-        Vector<Object> selected = dashboardTable.getSelectedEmployeeFullDetails();
-        if (selected == null || selected.isEmpty()) {
-            showCustomMessage("Please select an employee first.", "Message");
-            return;
-        }
-       
+     // 1. Get the selected employee's full data from the table
+     Vector<Object> selectedEmployee = dashboardTable.getSelectedEmployeeFullDetails();
 
-        new ViewEmployeePanel(selected);// Opens a new window showing employee details
-        }
+     if (selectedEmployee != null) {
+         // 2. Create a new window (JFrame) to hold the details
+         JFrame detailFrame = new JFrame("Employee Information - " + selectedEmployee.get(0));
+         detailFrame.setSize(1000, 700);
+         detailFrame.setLocationRelativeTo(null);
+         detailFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+         // 3. Add the ViewEmployeePanel to this frame
+         ViewEmployeePanel detailPanel = new ViewEmployeePanel(selectedEmployee);
+         detailFrame.add(detailPanel);
+
+         // 4. Show the window
+         detailFrame.setVisible(true);
+     } else {
+         // Warning if no row is clicked
+         JOptionPane.showMessageDialog(this, "Please select an employee from the table first.", "No Selection", JOptionPane.WARNING_MESSAGE);
+     }
+ }
         private void showCustomMessage(String message, String title) {
         JDialog customDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), title, true);
         customDialog.setSize(400, 260);
@@ -472,7 +486,7 @@ public class EmployeePanel extends JPanel {
             public void paint(Graphics g, JComponent c) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.BLACK);
+                g2.setColor(new Color(60, 100, 180));
                 g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 20, 20);
                 super.paint(g2, c);
                 g2.dispose();
@@ -511,9 +525,17 @@ public class EmployeePanel extends JPanel {
     // Overrides paintComponent to add gradient background to panel
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setPaint(new GradientPaint(0, 0, gradientStart, 0, getHeight(), gradientEnd));
-        g2d.fillRect(0, 0, getWidth(), getHeight());
+        // Leave this empty or just call the super method.
+        // This removes the pink/orange gradient and lets the Dashboard's blue show.
+    super.paintComponent(g);
+    }
+    // REPLACING THE BROKEN METHOD AT THE BOTTOM
+    public EmployeeTable getDashboardTable() {
+        return this.dashboardTable; 
     }
 }
+
+ //   Object getDashboardTable() {
+ //       return this.dashboardTable; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+ //   }
+// }

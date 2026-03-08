@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Vector;
-import model.PayrollLogic;
 
 public class ViewEmployeePanel extends JPanel {
 
@@ -27,8 +26,8 @@ public class ViewEmployeePanel extends JPanel {
     private static final Color GRADIENT_END = new Color(255, 229, 180);
     
     public JPanel getContentPane() {
-    return this; 
-}
+        return this; 
+    }
 
     public ViewEmployeePanel(Vector<Object> employeeData) {
         setLayout(new BorderLayout());
@@ -129,39 +128,33 @@ public class ViewEmployeePanel extends JPanel {
         navigationPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         JButton backBtn = new JButton("← Back to Dashboard");
-        // Re-using your styling logic
         backBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         backBtn.setFocusPainted(false);
         backBtn.setContentAreaFilled(false);
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Action: Find the window holding this panel and close it
         backBtn.addActionListener(e -> {
             Window window = SwingUtilities.getWindowAncestor(this);
-            if (window != null) {
-                window.dispose();
-            }
+            if (window != null) window.dispose();
         });
 
         navigationPanel.add(backBtn);
         add(navigationPanel, BorderLayout.SOUTH);
 
         JButton submitButton = new JButton("Compute");
-        submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Bold font
+        submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         submitButton.setBackground(Color.BLACK);
         submitButton.setForeground(Color.WHITE);
         submitButton.setFocusPainted(false);
-        submitButton.setBorder(BorderFactory.createEmptyBorder()); // No outline
+        submitButton.setBorder(BorderFactory.createEmptyBorder());
         submitButton.setPreferredSize(new Dimension(130, 40));
 
         JTextPane rightTextPane = new JTextPane();
-        rightTextPane.setContentType("text/html"); // Allow HTML formatting
+        rightTextPane.setContentType("text/html");
         rightTextPane.setEditable(false);
         rightTextPane.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        rightTextPane.setBackground(UIManager.getColor("Panel.background")); // Match background
+        rightTextPane.setBackground(UIManager.getColor("Panel.background"));
 
         JScrollPane textAreaScrollPane = new JScrollPane(rightTextPane);
-
         textAreaScrollPane.setBorder(null);
         textAreaScrollPane.getVerticalScrollBar().setUI(createScrollBarUI());
 
@@ -201,16 +194,16 @@ public class ViewEmployeePanel extends JPanel {
                 return;
             }
 
-            int totalWorkedMinutes = 0, totalLateMinutes = 0;
+            // ── REMOVED: totalLateMinutes tracking based from feedback ──
+            int totalWorkedMinutes = 0;
 
             for (String[] record : fileHandler.getAttendanceData()) {
                 if (record[0].equals(employeeId)) {
                     try {
                         LocalDate date = LocalDate.parse(record[1], formatter);
                         if (date.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH).equals(selectedMonth)) {
-                            int[] result = calculateWorkAndLateOffset(record[2], record[3]);
-                            totalWorkedMinutes += result[0];
-                            totalLateMinutes += result[1];
+                            int worked = calculateWorkedMinutes(record[2], record[3]);
+                            totalWorkedMinutes += worked;
                         }
                     } catch (DateTimeParseException ignored) {}
                 }
@@ -224,25 +217,28 @@ public class ViewEmployeePanel extends JPanel {
             }
 
             try {
-                double hourlyRate = safeParseDouble(emp[18]);
+                double hourlyRate  = safeParseDouble(emp[18]);
                 double basicSalary = safeParseDouble(emp[13]);
-                Benefits benefits = fileHandler.getBenefitsByEmployeeId(employeeId);
-                double rice = benefits.getRiceSubsidy(), phone = benefits.getPhoneAllowance(), clothing = benefits.getClothingAllowance();
+                Benefits benefits  = fileHandler.getBenefitsByEmployeeId(employeeId);
+                double rice        = benefits.getRiceSubsidy();
+                double phone       = benefits.getPhoneAllowance();
+                double clothing    = benefits.getClothingAllowance();
 
-                PayrollLogic logic = new PayrollLogic();
-                double grossWeekly = logic.calculateGrossWeeklySalary(hourlyRate, totalHoursWorked, rice, phone, clothing);
-                double latePenalty = logic.calculateLateDeduction(hourlyRate, totalLateMinutes);
-                double adjustedGross = grossWeekly - latePenalty;
+                PayrollLogic logic  = new PayrollLogic();
+                // ── REMOVED: latePenalty based from feedback ──
+                double grossWeekly = logic.calculateGrossWeeklySalary(
+                        hourlyRate, totalHoursWorked, rice, phone, clothing);
 
-                Deductions deductions = new Deductions();
-                double sss = deductions.calculateSSS(basicSalary);
-                double ph = deductions.calculatePhilHealth(basicSalary);
-                double pi = deductions.calculatePagIbig(basicSalary);
-                double tax = deductions.getMonthlyWithholdingTax(basicSalary);
+                Deductions deductions  = new Deductions();
+                double sss  = deductions.calculateSSS(basicSalary);
+                double ph   = deductions.calculatePhilHealth(basicSalary);
+                double pi   = deductions.calculatePagIbig(basicSalary);
+                double tax  = deductions.getMonthlyWithholdingTax(basicSalary);
                 double weeklyDeductions = (sss + ph + pi + tax) / 4;
-                double netMonthly = adjustedGross - weeklyDeductions;
-                double netWeekly = netMonthly / 4;
+                double netMonthly = grossWeekly - weeklyDeductions;
+                double netWeekly  = netMonthly / 4;
 
+                // ── REMOVED: Total Hours Worked, Total Late Minutes, Late Deduction ──
                 rightTextPane.setText(String.format("""
                         <html>
                         <body style='font-family:Calibri; font-size:11px;'>
@@ -250,56 +246,47 @@ public class ViewEmployeePanel extends JPanel {
                     <span style='font-size:16px; font-weight:bold;'>===== SALARY REPORT =====</span>
 
                     <b>BENEFITS:</b>
-                    • Rice Subsidy: ₱%,.2f
-                    • Phone Allowance: ₱%,.2f
-                    • Clothing Allowance: ₱%,.2f
-                    • Total Benefits: ₱%,.2f
-
-                    <b>WORK DETAILS:</b>
-                    • Hourly Rate: ₱%,.2f
-                    • Total Hours Worked (Monthly): %.2f
-                    • Total Late Minutes (Monthly): %d
+                    \u2022 Rice Subsidy: \u20b1%,.2f
+                    \u2022 Phone Allowance: \u20b1%,.2f
+                    \u2022 Clothing Allowance: \u20b1%,.2f
+                    \u2022 Total Benefits: \u20b1%,.2f
 
                     <b>SALARY:</b>
-                    • Gross Monthly Salary (with benefits): ₱%,.2f
-                    • Late Deduction: ₱%,.2f
-                    • Adjusted Gross Salary: ₱%,.2f
+                    \u2022 Gross Monthly Salary (with benefits): \u20b1%,.2f
 
                     <b>DEDUCTIONS (Monthly Basis):</b>
-                    • SSS: ₱%,.2f
-                    • PhilHealth: ₱%,.2f
-                    • Pag-IBIG: ₱%,.2f
-                    • Withholding Tax: ₱%,.2f
-                    • Weekly Deduction Total: ₱%,.2f
+                    \u2022 SSS: \u20b1%,.2f
+                    \u2022 PhilHealth: \u20b1%,.2f
+                    \u2022 Pag-IBIG: \u20b1%,.2f
+                    \u2022 Withholding Tax: \u20b1%,.2f
+                    \u2022 Weekly Deduction Total: \u20b1%,.2f
 
-                    <b><span style='color:green;'>NET MONTHLY SALARY: ₱%,.2f</span></b>
-                    <b><span style='color:green;'>NET WEEKLY SALARY: ₱%,.2f</span></b>
+                    <b><span style='color:green;'>NET MONTHLY SALARY: \u20b1%,.2f</span></b>
+                    <b><span style='color:green;'>NET WEEKLY SALARY: \u20b1%,.2f</span></b>
                         </pre>
                         </body>
                         </html>
                         """,
                         rice, phone, clothing, rice + phone + clothing,
-                        hourlyRate, totalHoursWorked, totalLateMinutes,
-                        grossWeekly, latePenalty, adjustedGross,
+                        grossWeekly,
                         sss, ph, pi, tax, weeklyDeductions,
                         netMonthly, netWeekly));
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Calculation error: " + ex.getMessage());
             }
         });
-        
-        // === wrapper ===
-        // combines left infor and right payroll panels into spil view
+
         // ===== SPLIT PANE =====
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contentScrollPane, rightPanel);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                contentScrollPane, rightPanel);
         splitPane.setResizeWeight(0.5);
         splitPane.setDividerLocation(0.5);
         splitPane.setOneTouchExpandable(true);
-        add(splitPane);
         add(splitPane, BorderLayout.CENTER);
+        add(navigationPanel, BorderLayout.SOUTH);
         setVisible(true);
-        
     }
 
     private double safeParseDouble(String value) {
@@ -310,8 +297,9 @@ public class ViewEmployeePanel extends JPanel {
         }
     }
 
-    private int[] calculateWorkAndLateOffset(String inStr, String outStr) {
-        inStr = sanitizeTime(inStr);
+    // ── REMOVED: overtime from calculation (feedback) ────────────────────────
+    private int calculateWorkedMinutes(String inStr, String outStr) {
+        inStr  = sanitizeTime(inStr);
         outStr = sanitizeTime(outStr);
 
         List<DateTimeFormatter> formats = List.of(
@@ -322,25 +310,20 @@ public class ViewEmployeePanel extends JPanel {
         );
 
         try {
-            LocalTime in = tryParseTime(inStr, formats);
+            LocalTime in  = tryParseTime(inStr,  formats);
             LocalTime out = tryParseTime(outStr, formats);
-            LocalTime grace = LocalTime.of(8, 15), workEnd = LocalTime.of(17, 0);
-
+            // Simply return total minutes worked minus lunch break (60 min)
             int total = (int) Duration.between(in, out).toMinutes();
-            int late = in.isAfter(grace) ? (int) Duration.between(grace, in).toMinutes() : 0;
-            int overtime = out.isAfter(workEnd) ? (int) Duration.between(workEnd, out).toMinutes() : 0;
-
-            return new int[]{total - 60, Math.max(late - overtime, 0)};
+            return Math.max(total - 60, 0);
         } catch (Exception e) {
-            return new int[]{0, 0};
+            return 0;
         }
     }
 
     private LocalTime tryParseTime(String time, List<DateTimeFormatter> formats) {
         for (DateTimeFormatter f : formats) {
-            try {
-                return LocalTime.parse(time, f);
-            } catch (Exception ignored) {}
+            try { return LocalTime.parse(time, f); }
+            catch (Exception ignored) {}
         }
         throw new IllegalArgumentException("Invalid time: " + time);
     }
@@ -359,11 +342,5 @@ public class ViewEmployeePanel extends JPanel {
                 return new Dimension(8, 30);
             }
         };
-    }        
+    }
 }
-
-//    private void setLocationRelativeTo(Object object) {
-//       throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-//   }
-
-  

@@ -14,8 +14,17 @@ import dao.EmployeeDAO;
 
 /**
  * LoginPanel — Entry point for MotorPH.
- * Uses EmployeeService for authentication.
- * Routes to AdminDashboard or EmployeeDashboardPanel based on role (RBAC).
+ *
+ * RBAC Routing:
+ *  ADMIN    → AdminDashboard       (full access)
+ *  HR       → HRDashboard          (add/update/delete/view employees)
+ *  FINANCE  → FinanceDashboard     (payslips + salary computation)
+ *  EMPLOYEE → EmployeeDashboardPanel (own data only)
+ *
+ * credentials.csv format: username,password,role
+ *  admin,1234,ADMIN
+ *  hr,hr123,HR
+ *  finance,finance123,FINANCE
  */
 public class LoginPanel extends JFrame {
 
@@ -32,7 +41,6 @@ public class LoginPanel extends JFrame {
     private final ImageIcon backgroundImage     =
             new ImageIcon(getClass().getResource("/assets/loginpanel_bg.png"));
 
-    // ── NEW: Service handles authentication ───────────────────────────────────
     private final EmployeeService employeeService = new EmployeeService(new EmployeeDAO());
 
     public LoginPanel() {
@@ -42,7 +50,7 @@ public class LoginPanel extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
-        // Background panel
+        // Background
         JPanel backgroundPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -67,7 +75,7 @@ public class LoginPanel extends JFrame {
         };
         card.setOpaque(false);
         card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(360, 360));
+        card.setPreferredSize(new Dimension(370, 380));
         card.setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -79,25 +87,21 @@ public class LoginPanel extends JFrame {
         JLabel titleLabel = new JLabel("Sign In", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
         titleLabel.setForeground(Color.DARK_GRAY);
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(10, 20, 10, 20);
+        gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.insets = new Insets(10, 20, 5, 20);
         card.add(titleLabel, gbc);
         gbc.gridwidth = 1;
 
-        // ── NEW: Role hint label ──────────────────────────────────────────────
+        // Hint
         JLabel hintLabel = new JLabel(
             "<html><center><font color='gray' size='2'>" +
-            "Admin: username + password &nbsp;|&nbsp; " +
-            "Employee: ID + Last Name</font></center></html>",
-            SwingConstants.CENTER);
-        gbc.gridy++;
-        gbc.insets = new Insets(0, 10, 8, 10);
+            "Staff: username + password &nbsp;|&nbsp; Employee: ID + Last Name" +
+            "</font></center></html>", SwingConstants.CENTER);
+        gbc.gridy++; gbc.insets = new Insets(0, 10, 8, 10);
         card.add(hintLabel, gbc);
 
         // Username
-        gbc.gridy++;
-        gbc.insets = new Insets(5, 20, 2, 20);
+        gbc.gridy++; gbc.insets = new Insets(5, 20, 2, 20);
         JLabel userLabel = new JLabel("Username / Employee ID");
         userLabel.setForeground(Color.GRAY);
         card.add(userLabel, gbc);
@@ -124,7 +128,7 @@ public class LoginPanel extends JFrame {
         passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         card.add(passwordField, gbc);
 
-        // Enter key listener
+        // Enter key
         KeyAdapter enterKey = new KeyAdapter() {
             @Override public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) checkLogin();
@@ -133,7 +137,7 @@ public class LoginPanel extends JFrame {
         usernameField.addKeyListener(enterKey);
         passwordField.addKeyListener(enterKey);
 
-        // Show password checkbox
+        // Show password
         gbc.gridy++;
         showPassword = new JCheckBox("Show Password");
         showPassword.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -146,8 +150,7 @@ public class LoginPanel extends JFrame {
         card.add(showPassword, gbc);
 
         // Login button
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 20, 10, 20);
+        gbc.gridy++; gbc.insets = new Insets(10, 20, 10, 20);
         loginButton = new JButton("Login") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -172,7 +175,7 @@ public class LoginPanel extends JFrame {
         loginButton.addActionListener(e -> checkLogin());
         card.add(loginButton, gbc);
 
-        // Feedback label
+        // Feedback
         gbc.gridy++;
         feedbackLabel = new JLabel(" ", SwingConstants.CENTER);
         feedbackLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -184,17 +187,15 @@ public class LoginPanel extends JFrame {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  Login logic — now uses EmployeeService for auth + RBAC routing
+    //  Login logic — routes to correct dashboard based on role
     // ════════════════════════════════════════════════════════════════════════
     private void checkLogin() {
         String user = usernameField.getText().trim();
         String pass = new String(passwordField.getPassword()).trim();
 
-        // ── NEW: authenticate returns role ("ADMIN", "EMPLOYEE", or null) ─────
         String role = employeeService.authenticate(user, pass);
 
         if (role != null) {
-            // Successful login
             feedbackLabel.setForeground(new Color(34, 139, 34));
             feedbackLabel.setText("Login Successful!");
 
@@ -204,13 +205,11 @@ public class LoginPanel extends JFrame {
                     try {
                         System.out.println("Login OK — Role: " + role + " | User: " + user);
 
-                        if (EmployeeService.ROLE_ADMIN.equals(role)) {
-                            // ── ADMIN: full access dashboard ─────────────────
-                            new AdminDashboard(user);
-
-                        } else {
-                            // ── EMPLOYEE: limited personal dashboard ──────────
-                            new EmployeeDashboardPanel(user);
+                        switch (role) {
+                            case EmployeeService.ROLE_ADMIN    -> new AdminDashboard(user);
+                            case EmployeeService.ROLE_HR       -> new HRDashboard(user);
+                            case EmployeeService.ROLE_FINANCE  -> new FinanceDashboard(user);
+                            default                            -> new EmployeeDashboardPanel(user);
                         }
 
                     } catch (Exception ex) {
@@ -226,7 +225,6 @@ public class LoginPanel extends JFrame {
             successTimer.start();
 
         } else {
-            // Failed login
             attempts++;
             feedbackLabel.setForeground(Color.RED);
 

@@ -15,7 +15,7 @@ public class Ticket {
     private String category;
     private String subject;
     private String description;
-    private String status; // "Open", "Resolved"
+    private String status; // "Open", "In Progress", "Resolved", "Closed"
 
     public Ticket(String ticketID, String senderName, String category, String subject, String description) {
         this.ticketID = ticketID;
@@ -25,6 +25,13 @@ public class Ticket {
         this.description = description;
         this.status = "Open";
     }
+    
+    // Constructor for LOADING from CSV (includes status
+    public Ticket(String ticketID, String senderName, String category, String subject, String description, String status){
+    this(ticketID, senderName, category, subject, description);
+    this.status = status; 
+    }
+    
     // ── Getters ──────────────────────────────────────────────────────────────
     public String getTicketID()    { return ticketID; }
     public String getSenderName()  { return senderName; }

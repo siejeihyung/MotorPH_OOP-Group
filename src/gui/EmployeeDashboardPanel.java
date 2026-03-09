@@ -23,7 +23,6 @@ public class EmployeeDashboardPanel extends JFrame {
     private final EmployeeService employeeService;
     private final LeaveService    leaveService;
 
-    private final Deductions deductionsService = new Deductions();
     private final CardLayout cardLayout = new CardLayout();
     private JPanel contentPanel;
 
@@ -31,10 +30,8 @@ public class EmployeeDashboardPanel extends JFrame {
     private JButton myInfoBtn;
     private JButton myAttendanceBtn;
     private JButton myLeaveBtn;
+    private JButton myTicketsBtn;
     private JButton logoutBtn;
-    private JButton myPayslipBtn;
-    private Object navPanel;
-    
 
     public EmployeeDashboardPanel(String employeeId) {
         this.employeeId     = employeeId;
@@ -51,13 +48,11 @@ public class EmployeeDashboardPanel extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // ── Build sidebar ─────────────────────────────────────────────────────
-        JPanel sidebar = buildSidebar(name);
-
-        // ── Build content panels ──────────────────────────────────────────────
-        JPanel myInfoPanel       = buildMyInfoPanel(empData);
+        // ── Build panels ──────────────────────────────────────────────────────
+        JPanel myInfoPanel                     = buildMyInfoPanel(empData);
         EmployeeAttendancePanel myAttendancePanel = new EmployeeAttendancePanel(employeeId);
-        JPanel myLeavePanel      = buildMyLeavePanel();
+        JPanel myLeavePanel                    = buildMyLeavePanel();
+        EmployeeTicketPanel myTicketsPanel     = new EmployeeTicketPanel(employeeId);
 
         // ── Content area ──────────────────────────────────────────────────────
         contentPanel = new JPanel(cardLayout) {
@@ -69,15 +64,21 @@ public class EmployeeDashboardPanel extends JFrame {
         };
 
         myAttendancePanel.setOpaque(false);
+        myTicketsPanel.setOpaque(false);
 
-        contentPanel.add(myInfoPanel,       "MyInfo");
-        contentPanel.add(myAttendancePanel, "MyAttendance");
-        contentPanel.add(myLeavePanel,      "MyLeave");
+        contentPanel.add(myInfoPanel,         "MyInfo");
+        contentPanel.add(myAttendancePanel,   "MyAttendance");
+        contentPanel.add(myLeavePanel,        "MyLeave");
+        contentPanel.add(myTicketsPanel,      "MyTickets");
+
+        // ── Build sidebar ─────────────────────────────────────────────────────
+        JPanel sidebar = buildSidebar(name);
 
         // ── Wire buttons ──────────────────────────────────────────────────────
         myInfoBtn.addActionListener(e       -> cardLayout.show(contentPanel, "MyInfo"));
         myAttendanceBtn.addActionListener(e -> cardLayout.show(contentPanel, "MyAttendance"));
         myLeaveBtn.addActionListener(e      -> cardLayout.show(contentPanel, "MyLeave"));
+        myTicketsBtn.addActionListener(e    -> cardLayout.show(contentPanel, "MyTickets"));
         logoutBtn.addActionListener(e -> {
             dispose();
             SwingUtilities.invokeLater(() -> new LoginPanel().setVisible(true));
@@ -98,7 +99,6 @@ public class EmployeeDashboardPanel extends JFrame {
         sidebar.setPreferredSize(new Dimension(250, getHeight()));
         sidebar.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // Profile
         JPanel profilePanel = new JPanel(new BorderLayout(10, 0));
         profilePanel.setBackground(Color.WHITE);
         profilePanel.add(new JLabel(loadIcon("/assets/userprofile.png", 40, 40)), BorderLayout.WEST);
@@ -114,9 +114,7 @@ public class EmployeeDashboardPanel extends JFrame {
         namePanel.add(nameLabel);
         namePanel.add(roleLabel);
         profilePanel.add(namePanel, BorderLayout.CENTER);
-        // Inside buildSidebar method, near other makeNavBtn calls
-       
-        // Nav
+
         JPanel navPanel = new JPanel();
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
         navPanel.setBackground(Color.WHITE);
@@ -127,10 +125,10 @@ public class EmployeeDashboardPanel extends JFrame {
         myDataLabel.setBorder(new EmptyBorder(0, 10, 10, 0));
         myDataLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // ── Assign to fields ──────────────────────────────────────────────────
         myInfoBtn       = makeNavBtn("My Profile",    "employee.png");
         myAttendanceBtn = makeNavBtn("My Attendance", "attendance.png");
         myLeaveBtn      = makeNavBtn("My Leave",      "leave.png");
+        myTicketsBtn    = makeNavBtn("IT Support",    "IT Support.png");
         logoutBtn       = makeNavBtn("Log-out",       "logout.png");
         logoutBtn.setForeground(Color.GRAY);
 
@@ -141,20 +139,14 @@ public class EmployeeDashboardPanel extends JFrame {
         navPanel.add(myAttendanceBtn);
         navPanel.add(Box.createVerticalStrut(5));
         navPanel.add(myLeaveBtn);
+        navPanel.add(Box.createVerticalStrut(5));
+        navPanel.add(myTicketsBtn);
 
         sidebar.add(profilePanel, BorderLayout.NORTH);
         sidebar.add(navPanel,     BorderLayout.CENTER);
         sidebar.add(logoutBtn,    BorderLayout.SOUTH);
-
-        // INSERT THE NEW BUTTON HERE
-        myPayslipBtn = makeNavBtn("My Payslip", "Payslip Button.png");
-        navPanel.add(myPayslipBtn); // This will work now because navPanel is initialized above
-        myPayslipBtn.addActionListener(e -> openMyPayslip());
-        
         return sidebar;
     }
-    
-    //Payslip
 
     // ════════════════════════════════════════════════════════════════════════
     //  My Profile panel
@@ -167,23 +159,19 @@ public class EmployeeDashboardPanel extends JFrame {
         card.setBackground(Color.WHITE);
         card.setBorder(new EmptyBorder(25, 30, 25, 30));
 
-        String[] labels = {
-            "Employee ID", "Last Name", "First Name", "Birthday",
-            "Address", "Phone", "SSS #", "PhilHealth #",
-            "TIN #", "Pag-IBIG #", "Status", "Position",
-            "Supervisor", "Basic Salary", "Hourly Rate"
-        };
-        int[] indices = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 18};
+        String[] labels  = {"Employee ID", "Last Name", "First Name", "Birthday",
+                            "Address", "Phone", "SSS #", "PhilHealth #",
+                            "TIN #", "Pag-IBIG #", "Status", "Position",
+                            "Supervisor", "Basic Salary", "Hourly Rate"};
+        int[]    indices = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 18};
 
         for (int i = 0; i < labels.length; i++) {
             JLabel lbl = new JLabel(labels[i] + ":");
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-
             String val = (empData != null && indices[i] < empData.length)
                     ? empData[indices[i]] : "—";
             JLabel valLbl = new JLabel(val);
             valLbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-
             card.add(lbl);
             card.add(valLbl);
         }
@@ -200,7 +188,6 @@ public class EmployeeDashboardPanel extends JFrame {
         panel.setOpaque(false);
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // ── 1. Top Section: Title and Balance Cards ──────────────────────────
         JLabel title = new JLabel("My Leave");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
         title.setForeground(Color.WHITE);
@@ -214,24 +201,10 @@ public class EmployeeDashboardPanel extends JFrame {
         balanceRow.add(makeBalanceCard("Emergency Leave",
                 leaveService.getRemainingBalance(employeeId, "Emergency"), 3));
 
-        JPanel topArea = new JPanel(new BorderLayout(0, 8));
-        topArea.setOpaque(false);
-        topArea.add(title, BorderLayout.NORTH);
-        topArea.add(balanceRow, BorderLayout.CENTER);
-
-        // ── 2. Center Section: History Table with Floating Button ─────────────
-        // We use a JLayeredPane or a OverlayLayout to put the button over the table area
-        JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(Color.WHITE);
-        tableContainer.setBorder(BorderFactory.createLineBorder(new Color(200, 215, 240), 1, true));
-
-        // Define table model as a field if you want to use the refresh logic later
         String[] cols = {"Leave ID", "Date", "Type", "Days", "Status"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-
-        // Initial data load
         for (String[] row : leaveService.getLeavesForEmployee(employeeId)) {
             model.addRow(new Object[]{row[1], row[2], row[3], row[4], row[5]});
         }
@@ -239,100 +212,23 @@ public class EmployeeDashboardPanel extends JFrame {
         JTable table = new JTable(model);
         table.setRowHeight(26);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setBackground(Color.WHITE);
         table.getTableHeader().setBackground(new Color(20, 50, 110));
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         table.setFillsViewportHeight(true);
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(200, 215, 240), 1, true));
 
-        // ── 3. Lower Right Button Area ────────────────────────────────────────
-        // This panel sits at the SOUTH of the white table container
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
-        buttonPanel.setOpaque(false); // Keeps the white background of tableContainer
+        JPanel topArea = new JPanel(new BorderLayout(0, 8));
+        topArea.setOpaque(false);
+        topArea.add(title,      BorderLayout.NORTH);
+        topArea.add(balanceRow, BorderLayout.CENTER);
 
-        JButton fileLeaveBtn = new JButton("+ File Leave");
-        fileLeaveBtn.setBackground(new Color(56, 142, 60)); // Green from admin screenshot
-        fileLeaveBtn.setForeground(Color.WHITE);
-        fileLeaveBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        fileLeaveBtn.setFocusPainted(false);
-        fileLeaveBtn.setPreferredSize(new Dimension(130, 35));
-        fileLeaveBtn.addActionListener(e -> openFileLeaveDialog());
-
-        buttonPanel.add(fileLeaveBtn);
-
-        tableContainer.add(scroll, BorderLayout.CENTER);
-        tableContainer.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Assembly
         panel.add(topArea, BorderLayout.NORTH);
-        panel.add(tableContainer, BorderLayout.CENTER);
-
+        panel.add(scroll,  BorderLayout.CENTER);
         return panel;
-    } 
-
-    private void openFileLeaveDialog() {
-        JDialog dialog = new JDialog(this, "Request Leave", true);
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(this);
-
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(Color.WHITE);
-        form.setBorder(new EmptyBorder(20, 25, 10, 25));
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(8, 6, 8, 6);
-        gc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Prefill and disable the ID field so they can only file for themselves
-        JTextField empIdField = new JTextField(employeeId); 
-        empIdField.setEditable(false); 
-
-        JTextField dateField = new JTextField("YYYY-MM-DD", 15);
-        JComboBox<String> typeBox = new JComboBox<>(new String[]{"Sick", "Vacation", "Emergency"});
-        JSpinner daysSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 30, 1));
-
-        // Layout components
-        String[] labels = {"Employee ID:", "Start Date *:", "Leave Type *:", "Days *:"};
-        Component[] fields = {empIdField, dateField, typeBox, daysSpinner};
-
-        for (int i = 0; i < labels.length; i++) {
-            gc.gridx = 0; gc.gridy = i;
-            form.add(new JLabel(labels[i]), gc);
-            gc.gridx = 1;
-            form.add(fields[i], gc);
-        }
-
-        JButton submitBtn = new JButton("Submit Request");
-        submitBtn.addActionListener(e -> {
-            String dateStr = dateField.getText().trim();
-            String type = (String) typeBox.getSelectedItem();
-            int days = (int) daysSpinner.getValue();
-
-            // Validate date and balance using existing leaveService
-            try {
-                java.time.LocalDate.parse(dateStr);
-                int balance = leaveService.getRemainingBalance(employeeId, type);
-
-                if (days > balance) {
-                    JOptionPane.showMessageDialog(dialog, "Insufficient " + type + " balance.");
-                    return;
-                }
-
-                if (leaveService.fileLeave(employeeId, java.time.LocalDate.parse(dateStr), type, days)) {
-                    JOptionPane.showMessageDialog(dialog, "Leave requested successfully!");
-                    dialog.dispose();
-                    // Refresh the card layout to update the table
-                    cardLayout.show(contentPanel, "MyLeave"); 
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Invalid Date format (YYYY-MM-DD).");
-            }
-        });
-
-        dialog.add(form, BorderLayout.CENTER);
-        dialog.add(submitBtn, BorderLayout.SOUTH);
-        dialog.setVisible(true);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -390,50 +286,8 @@ public class EmployeeDashboardPanel extends JFrame {
         return new ImageIcon(
                 new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
     }
-    
-    private void openMyPayslip() {
-    // 1. Fetch data for the logged-in employee
-    String[] empData = employeeService.getEmployeeById(employeeId);
-
-    if (empData != null) {
-        // 2. Prepare Vector for PayslipFrame
-        Vector<Object> dataVector = new Vector<>();
-        for (String s : empData) dataVector.add(s);
-
-        try {
-            // Helper to handle numbers like "25,000.00" or nulls
-            java.util.function.Function<String, Double> parse = (val) -> {
-                if (val == null || val.trim().isEmpty()) return 0.0;
-                return Double.parseDouble(val.replace(",", "").replace("\"", "").trim());
-            };
-
-            // 3. Extract Monthly Basic Salary (Index 13)
-            double basicSalary = parse.apply(empData[13]);
-            
-            // 4. Extract Allowances (Indices 14, 15, 16)
-            double rice     = parse.apply(empData[14]);
-            double phone    = parse.apply(empData[15]);
-            double clothing = parse.apply(empData[16]);
-
-            // 5. Calculate Gross and Deductions
-            double gross = basicSalary + rice + phone + clothing;
-            
-            // This calls your SSS/Tax logic from Deductions.java
-            double totalDeductions = deductionsService.getTotalDeductions(basicSalary, 0);
-            double netPay = gross - totalDeductions;
-
-            // 6. Launch the Payslip UI
-            new PayslipFrame(dataVector, gross, totalDeductions, netPay);
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Calculation Error: " + ex.getMessage());
-        }
-    } else {
-        JOptionPane.showMessageDialog(this, "Employee record not found.");
-    }
 }
-}
+
         
         
         

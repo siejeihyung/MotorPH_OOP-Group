@@ -12,6 +12,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
 import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+import model.Ticket;
 
 /**
  * AdminDashboard — Full-access dashboard for HR Admin.
@@ -23,13 +25,16 @@ public class AdminDashboard extends JFrame {
     private JPanel contentPanel;
     private final EmployeePanel employeePanel = new EmployeePanel();
 
-    // ── Buttons stored as fields so they can be wired after sidebar is built ──
+    // ── IT Tickets table ──────────────────────────────────────────────────────
+    private DefaultTableModel ticketTableModel;
+
+    // ── Buttons ───────────────────────────────────────────────────────────────
     private JButton employeeBtn;
     private JButton leaveBtn;
     private JButton attendanceBtn;
     private JButton printPayslipBtn;
+    private JButton ticketsBtn;
     private JButton logoutBtn;
-    private JButton ticketBtn;
 
     public AdminDashboard(String username) {
         setTitle("MotorPH — Admin Dashboard");
@@ -39,15 +44,13 @@ public class AdminDashboard extends JFrame {
         setLayout(new BorderLayout());
         setMinimumSize(new Dimension(800, 500));
 
-        // ── Services ──────────────────────────────────────────────────────────
-        LeaveService      leaveService      = new LeaveService(new LeaveDAO());
-        AttendancePanel   attendancePanel   = new AttendancePanel(new model.FileHandler());
-        LeavePanel        leavePanel        = new LeavePanel(leaveService);
+        LeaveService    leaveService    = new LeaveService(new LeaveDAO());
+        LeavePanel      leavePanel      = new LeavePanel(leaveService);
+        AttendancePanel attendancePanel = new AttendancePanel(new model.FileHandler());
+        JPanel          ticketsPanel   = buildTicketsPanel();
 
-        // ── Content area ──────────────────────────────────────────────────────
         contentPanel = new JPanel(cardLayout) {
-            @Override
-            protected void paintComponent(Graphics g) {
+            @Override protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 g.setColor(new Color(29, 69, 143));
                 g.fillRect(0, 0, getWidth(), getHeight());
@@ -58,26 +61,21 @@ public class AdminDashboard extends JFrame {
         leavePanel.setOpaque(false);
         attendancePanel.setOpaque(false);
 
-        contentPanel.add(employeePanel,            "Employee");
-        contentPanel.add(leavePanel,               "Leave");
-        contentPanel.add(attendancePanel,          "Attendance");
-        contentPanel.add(new TicketSupportPanel(), "Tickets");
+        contentPanel.add(employeePanel,   "Employee");
+        contentPanel.add(leavePanel,      "Leave");
+        contentPanel.add(attendancePanel, "Attendance");
+        contentPanel.add(ticketsPanel,    "Tickets");
 
-        // ── Build sidebar — buttons are assigned to fields inside ─────────────
         JPanel sidebar = buildSidebar();
 
-        // ── Wire buttons directly ─────────────────────────────────────────────
-        employeeBtn.addActionListener(e ->
-                cardLayout.show(contentPanel, "Employee"));
-
-        leaveBtn.addActionListener(e ->
-                cardLayout.show(contentPanel, "Leave"));
-
-        attendanceBtn.addActionListener(e ->
-                cardLayout.show(contentPanel, "Attendance"));
-        
-        ticketBtn.addActionListener(e -> 
-                cardLayout.show(contentPanel, "Tickets"));
+        // ── Wire buttons ──────────────────────────────────────────────────────
+        employeeBtn.addActionListener(e   -> cardLayout.show(contentPanel, "Employee"));
+        leaveBtn.addActionListener(e      -> cardLayout.show(contentPanel, "Leave"));
+        attendanceBtn.addActionListener(e -> cardLayout.show(contentPanel, "Attendance"));
+        ticketsBtn.addActionListener(e    -> {
+            refreshTicketTable();
+            cardLayout.show(contentPanel, "Tickets");
+        });
 
         printPayslipBtn.addActionListener(e -> {
             EmployeeTable table = (EmployeeTable) employeePanel.getDashboardTable();
@@ -86,8 +84,7 @@ public class AdminDashboard extends JFrame {
                 double gross = parseMoney(selected.get(13));
                 new PayslipFrame(selected, gross, 0.0, gross);
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Please select an employee from the table first!");
+                JOptionPane.showMessageDialog(this, "Please select an employee first!");
             }
         });
 
@@ -96,13 +93,95 @@ public class AdminDashboard extends JFrame {
             SwingUtilities.invokeLater(() -> new LoginPanel().setVisible(true));
         });
 
-        add(sidebar, BorderLayout.WEST);
+        add(sidebar,      BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
         setVisible(true);
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  Sidebar — buttons assigned to fields here
+    //  IT Tickets panel for Admin (view all + update status)
+    // ════════════════════════════════════════════════════════════════════════
+    private JPanel buildTicketsPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        JLabel title = new JLabel("IT Support Tickets");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        title.setForeground(Color.WHITE);
+
+        String[] headers = {"Ticket ID", "Sender", "Category", "Subject", "Status"};
+        ticketTableModel = new DefaultTableModel(headers, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        JTable table = new JTable(ticketTableModel);
+        table.setRowHeight(28);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setBackground(Color.WHITE);
+        table.setSelectionBackground(new Color(100, 149, 237));
+        table.setSelectionForeground(Color.WHITE);
+        table.setFillsViewportHeight(true);
+        table.getTableHeader().setBackground(new Color(20, 50, 110));
+        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(200, 215, 240), 1));
+        scroll.getViewport().setBackground(Color.WHITE);
+
+        // ── Action buttons ─────────────────────────────────────────────────────
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
+        actionPanel.setOpaque(false);
+
+        JButton updateBtn  = makeActionBtn("✅ Update Status", new Color(56, 142, 60));
+        JButton refreshBtn = makeActionBtn("↻ Refresh",        new Color(30, 144, 255));
+
+        updateBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a ticket first.");
+                return;
+            }
+            String ticketID = ticketTableModel.getValueAt(row, 0).toString();
+            String[] statuses = {"Open", "In Progress", "Resolved", "Closed"};
+            String newStatus = (String) JOptionPane.showInputDialog(this,
+                    "Select new status:", "Update Ticket",
+                    JOptionPane.QUESTION_MESSAGE, null, statuses,
+                    ticketTableModel.getValueAt(row, 4));
+            if (newStatus != null) {
+                dao.TicketDAO dao = new dao.TicketDAO();
+                if (dao.updateTicketStatus(ticketID, newStatus)) {
+                    refreshTicketTable();
+                    JOptionPane.showMessageDialog(this, "Status updated successfully.");
+                }
+            }
+        });
+
+        refreshBtn.addActionListener(e -> refreshTicketTable());
+
+        actionPanel.add(updateBtn);
+        actionPanel.add(refreshBtn);
+
+        panel.add(title,       BorderLayout.NORTH);
+        panel.add(scroll,      BorderLayout.CENTER);
+        panel.add(actionPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void refreshTicketTable() {
+        ticketTableModel.setRowCount(0);
+        dao.TicketDAO ticketDAO = new dao.TicketDAO();
+        for (Ticket t : ticketDAO.getAllTickets()) {
+            ticketTableModel.addRow(new Object[]{
+                t.getTicketID(), t.getSenderName(),
+                t.getCategory(), t.getSubject(), t.getStatus()
+            });
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Sidebar
     // ════════════════════════════════════════════════════════════════════════
     private JPanel buildSidebar() {
         JPanel sidebar = new JPanel(new BorderLayout());
@@ -110,11 +189,9 @@ public class AdminDashboard extends JFrame {
         sidebar.setPreferredSize(new Dimension(250, getHeight()));
         sidebar.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // Profile
         JPanel profilePanel = new JPanel(new BorderLayout(10, 0));
         profilePanel.setBackground(Color.WHITE);
-        profilePanel.add(new JLabel(loadIcon("/assets/userprofile.png", 40, 40)),
-                BorderLayout.WEST);
+        profilePanel.add(new JLabel(loadIcon("/assets/userprofile.png", 40, 40)), BorderLayout.WEST);
 
         JPanel namePanel = new JPanel();
         namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.Y_AXIS));
@@ -127,9 +204,7 @@ public class AdminDashboard extends JFrame {
         namePanel.add(nameLabel);
         namePanel.add(roleLabel);
         profilePanel.add(namePanel, BorderLayout.CENTER);
-        
 
-        // Nav
         JPanel navPanel = new JPanel();
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
         navPanel.setBackground(Color.WHITE);
@@ -140,13 +215,12 @@ public class AdminDashboard extends JFrame {
         generalLabel.setBorder(new EmptyBorder(0, 10, 10, 0));
         generalLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // ── Assign to fields ──────────────────────────────────────────────────
         employeeBtn     = makeNavBtn("Employee",         "employee.png");
         leaveBtn        = makeNavBtn("Leave Management", "leave.png");
         attendanceBtn   = makeNavBtn("Attendance",       "attendance.png");
-        printPayslipBtn = makeNavBtn("Print Payslip",    "Payslip Button.png");
+        printPayslipBtn = makeNavBtn("Print Payslip",    "printer.png");
+        ticketsBtn      = makeNavBtn("IT Tickets",       "IT Support.png");
         logoutBtn       = makeNavBtn("Log-out",          "logout.png");
-        ticketBtn       = makeNavBtn("Ticket Support",   "IT Support .png");
         logoutBtn.setForeground(Color.GRAY);
 
         navPanel.add(Box.createVerticalStrut(20));
@@ -158,8 +232,8 @@ public class AdminDashboard extends JFrame {
         navPanel.add(attendanceBtn);
         navPanel.add(Box.createVerticalStrut(5));
         navPanel.add(printPayslipBtn);
-        navPanel.add(ticketBtn);
         navPanel.add(Box.createVerticalStrut(5));
+        navPanel.add(ticketsBtn);
 
         sidebar.add(profilePanel, BorderLayout.NORTH);
         sidebar.add(navPanel,     BorderLayout.CENTER);
@@ -167,7 +241,7 @@ public class AdminDashboard extends JFrame {
         return sidebar;
     }
 
-    // ── Nav button factory ────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private JButton makeNavBtn(String text, String iconFile) {
         JButton btn = new JButton(text);
         btn.setIcon(loadIcon("/assets/" + iconFile, 20, 20));
@@ -190,6 +264,28 @@ public class AdminDashboard extends JFrame {
         return btn;
     }
 
+    private JButton makeActionBtn(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setFocusPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(160, 36));
+        btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override public void paint(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 18, 18);
+                super.paint(g2, c);
+                g2.dispose();
+            }
+        });
+        return btn;
+    }
+
     private ImageIcon loadIcon(String path, int w, int h) {
         URL url = getClass().getResource(path);
         if (url == null) return null;
@@ -202,8 +298,6 @@ public class AdminDashboard extends JFrame {
         try {
             return Double.parseDouble(
                     value.toString().replace(",", "").replace("\"", "").trim());
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
+        } catch (NumberFormatException e) { return 0.0; }
     }
 }

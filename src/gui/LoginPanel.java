@@ -206,10 +206,11 @@ public class LoginPanel extends JFrame {
                         System.out.println("Login OK — Role: " + role + " | User: " + user);
 
                         switch (role) {
-                            case EmployeeService.ROLE_ADMIN    -> new AdminDashboard(user);
-                            case EmployeeService.ROLE_HR       -> new HRDashboard(user);
-                            case EmployeeService.ROLE_FINANCE  -> new FinanceDashboard(user);
-                            default                            -> new EmployeeDashboardPanel(user);
+                            case EmployeeService.ROLE_ADMIN      -> new AdminDashboard(user);
+                            case EmployeeService.ROLE_HR         -> new HRDashboard(user);
+                            case EmployeeService.ROLE_FINANCE    -> new FinanceDashboard(user);
+                            case EmployeeService.ROLE_IT_SUPPORT -> new ITSupportDashboard(user); 
+                            default                              -> new EmployeeDashboardPanel(user);
                         }
 
                     } catch (Exception ex) {

@@ -26,6 +26,7 @@ public class EmployeeService {
     public static final String ROLE_HR       = "HR";
     public static final String ROLE_FINANCE  = "FINANCE";
     public static final String ROLE_EMPLOYEE = "EMPLOYEE";
+    public static final String ROLE_IT_SUPPORT = "IT_SUPPORT";
 
     public EmployeeService(EmployeeDAO employeeDAO) {
         this.employeeDAO = employeeDAO;

@@ -29,6 +29,7 @@ public class AdminDashboard extends JFrame {
     private JButton attendanceBtn;
     private JButton printPayslipBtn;
     private JButton logoutBtn;
+    private JButton ticketBtn;
 
     public AdminDashboard(String username) {
         setTitle("MotorPH — Admin Dashboard");
@@ -57,9 +58,10 @@ public class AdminDashboard extends JFrame {
         leavePanel.setOpaque(false);
         attendancePanel.setOpaque(false);
 
-        contentPanel.add(employeePanel,   "Employee");
-        contentPanel.add(leavePanel,      "Leave");
-        contentPanel.add(attendancePanel, "Attendance");
+        contentPanel.add(employeePanel,            "Employee");
+        contentPanel.add(leavePanel,               "Leave");
+        contentPanel.add(attendancePanel,          "Attendance");
+        contentPanel.add(new TicketSupportPanel(), "Tickets");
 
         // ── Build sidebar — buttons are assigned to fields inside ─────────────
         JPanel sidebar = buildSidebar();
@@ -73,6 +75,9 @@ public class AdminDashboard extends JFrame {
 
         attendanceBtn.addActionListener(e ->
                 cardLayout.show(contentPanel, "Attendance"));
+        
+        ticketBtn.addActionListener(e -> 
+                cardLayout.show(contentPanel, "Tickets"));
 
         printPayslipBtn.addActionListener(e -> {
             EmployeeTable table = (EmployeeTable) employeePanel.getDashboardTable();
@@ -140,6 +145,7 @@ public class AdminDashboard extends JFrame {
         attendanceBtn   = makeNavBtn("Attendance",       "attendance.png");
         printPayslipBtn = makeNavBtn("Print Payslip",    "Payslip Button.png");
         logoutBtn       = makeNavBtn("Log-out",          "logout.png");
+        ticketBtn       = makeNavBtn("Ticket Support",   "IT Support.png");
         logoutBtn.setForeground(Color.GRAY);
 
         navPanel.add(Box.createVerticalStrut(20));
@@ -151,6 +157,8 @@ public class AdminDashboard extends JFrame {
         navPanel.add(attendanceBtn);
         navPanel.add(Box.createVerticalStrut(5));
         navPanel.add(printPayslipBtn);
+        navPanel.add(ticketBtn);
+        navPanel.add(Box.createVerticalStrut(5));
 
         sidebar.add(profilePanel, BorderLayout.NORTH);
         sidebar.add(navPanel,     BorderLayout.CENTER);

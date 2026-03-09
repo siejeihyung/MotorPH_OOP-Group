@@ -1,37 +1,38 @@
-<h1 align="center">MotorPH Payroll & HR System — NewGUI Version 1.4.3</h1>
+<h1 align="center">MotorPH Payroll & HR System — NewGUI Version 1.4.4</h1>
 <p align="center">
-<strong>Description:</strong> Enterprise-grade update featuring Full RBAC Implementation, Multi-Role Dashboards, and specialized IT Ticketing support.
+<strong>Description:</strong> Enterprise-grade update featuring Full RBAC Implementation, Multi-Role Dashboards, and a Production-Ready IT Ticketing Engine.
 </p>
 
 <hr>
 
 <h2>📝 Description</h2>
 <ul>
-<li>Welcome to the official release of <b>MotorPH NewGUI (Version 1.4.2)</b>.</li>
-<li>This milestone introduces the <b>IT Specialist</b> role, specifically dedicated to system maintenance and the management of our new <b>Internal Ticketing System</b>.</li>
-<li>The system has been refactored to prioritize data integrity by moving all legacy <code>.txt</code> storage to standardized <b>CSV</b> formats.</li>
+<li>Welcome to the official release of <b>MotorPH NewGUI (Version 1.4.4)</b>.</li>
+<li>This milestone completes the <b>IT Specialist</b> workflow, integrating real-time ticket management with a modernized, Finance-aligned user interface.</li>
+<li>The system now features full <b>Two-Way Data Persistence</b> for tickets, moving from static viewing to active CSV state management.</li>
 </ul>
 
-<h2>🚀 What's New in Version 1.4.3</h2>
+<h2>🚀 What's New in Version 1.4.4</h2>
 <ul>
-<li><b>IT Support & Ticketing Module:</b>
+<li><b>Production-Ready IT Support Dashboard:</b>
 <ul>
-<li><b>Ticketing System:</b> All employees can now file support tickets (bugs, login issues, etc.) directly through their dashboard.</li>
-<li><b>IT Specialist Dashboard:</b> A dedicated environment for IT staff to monitor, categorize, and resolve incoming tickets with a full <b>Ticket History</b> log.</li>
+<li><b>UI Alignment:</b> The IT Specialist environment has been fully redesigned to match the "MotorPH Blue" corporate theme used in the Finance and Admin modules.</li>
+<li><b>Real-Time Filtering:</b> Added a <b>Live Search/Filter</b> bar allowing IT staff to instantly sort tickets by Sender, ID, or Category.</li>
+<li><b>Two-Way Persistence:</b> Integrated <code>TicketDAO</code> with auto-save capabilities; ticket status updates (Open, In Progress, Resolved) now write directly to <code>tickets.csv</code>.</li>
+<li><b>Summary Analytics:</b> Added top-level summary cards providing instant counts of Total, Open, and Resolved tickets.</li>
 </ul>
 </li>
 <li><b>Expanded RBAC:</b> Intelligent routing now supports 5 roles: <b>ADMIN, HR, FINANCE, EMPLOYEE, and IT SPECIALIST</b> via <code>credentials.csv</code>.</li>
-<li><b>Salary Report Cleanup:</b> Streamlined <code>ViewEmployeePanel</code> by removing legacy metrics (Monthly Total Hours, Late Minutes, and Late Deductions) to focus on net pay accuracy.</li>
-<li><b>Logic Optimization:</b> Renamed <code>calculateWorkAndLateOffset()</code> to <b><code>calculateWorkedMinutes()</code></b> for better architectural clarity.</li>
+<li><b>Logic Optimization:</b> Refactored <code>TicketDAO</code> with robust error handling and flexible pathing to prevent "File Not Found" errors across different IDE environments.</li>
 </ul>
 
 <h2>🛠 Technical Features (OOP Principles)</h2>
 <ul>
-<li><b>Encapsulation:</b> Ticket and leave data are centralized in <code>FileHandler.java</code>, ensuring <b>CSV</b> data is accessed only through secure, controlled methods.</li>
-<li><b>Abstraction:</b> The UI interaction layer is decoupled from file storage, allowing for seamless updates to data formats.</li>
-<li><b>Inheritance:</b> Custom UI components for the IT Support dashboard extend base layout classes to ensure UI consistency.</li>
-<li><b>Polymorphism:</b> Overridden navigation logic ensures that the dashboard interface dynamically adapts to the specific permissions of the logged-in user.</li>
-<li><b>Composition:</b> The <code>Employee</code> class uses <code>Benefits</code> and <code>Ticket</code> objects to maintain modularity.</li>
+<li><b>Encapsulation:</b> Ticket data is managed through <code>TicketDAO.java</code>, ensuring <b>CSV</b> data is accessed only through secure, controlled methods with proper regex-based comma handling.</li>
+<li><b>Abstraction:</b> The UI interaction layer is decoupled from file storage via the DAO pattern, allowing for future SQL integration without breaking the View layer.</li>
+<li><b>Inheritance:</b> Action buttons and navigation components leverage custom UI factories to maintain design consistency across all dashboards.</li>
+<li><b>Polymorphism:</b> Table row sorters and regex filters dynamically adapt to user input for optimized data searching.</li>
+<li><b>Composition:</b> The <code>ITSupportDashboard</code> integrates <code>DefaultTableModel</code> and <code>TableRowSorter</code> to handle complex data presentation.</li>
 </ul>
 
 <h2>📋 System Roles & Access</h2>
@@ -54,7 +55,7 @@
 </tr>
 <tr>
 <td><b>IT SPECIALIST</b></td>
-<td><b>Ticketing System Management</b>, and audit logs.</td>
+<td><b>Ticketing System Management</b>, Status Lifecycle Control, and Audit Logs.</td>
 </tr>
 <tr>
 <td><b>EMPLOYEE</b></td>
@@ -64,17 +65,17 @@
 
 <h2>⚠️ Current Known Issues & Roadmap</h2>
 <ul>
-<li><b>Dashboard Polishing:</b> The IT Support dashboard requires further visual refinement to ensure it meets the "MotorPH Blue" corporate theme.</li>
-<li><b>Ticket Format Audit:</b> The current ticket format is undergoing a total redesign to ensure consistency across the ADMIN, HR, FINANCE, and IT roles.</li>
-<li><b>Standardization:</b> Ongoing efforts to unify the "Ticket History" and "Leave History" visual formats to ensure a seamless experience for all users.</li>
+<li><b>Notification System:</b> Developing an alert system to notify IT Specialists when a new high-priority ticket is filed.</li>
+<li><b>Export Feature:</b> Planning a CSV/PDF export for the Ticket History log for monthly IT performance audits.</li>
+<li><b>Attachments:</b> Investigating support for screenshot/file attachments within the ticketing module.</li>
 </ul>
 
 <h2>⚙️ Development Setup</h2>
 <ul>
-<li><b>Clone Branch:</b> <code>git clone -b NewGUI-Version1.4.2 https://github.com/siejeihyung/MotorPH_OOP-Group-28.git</code></li>
-<li><b>CSV Integrity:</b> Ensure all data files in the <code>data/</code> directory (specifically <code>tickets.csv</code> and <code>leave_history.csv</code>) utilize <code>.csv</code> extensions.</li>
-<li><b>Build:</b> Perform a <b>"Clean and Build"</b> to ensure new IT Specialist routing and ticket management logic are correctly integrated.</li>
+<li><b>Clone Branch:</b> <code>git clone -b NewGUI-Version1.4.4 https://github.com/siejeihyung/MotorPH_OOP-Group-28.git</code></li>
+<li><b>CSV Integrity:</b> Ensure <code>tickets.csv</code> is located in <code>src/data/</code> or the project root. The system will automatically detect the active path.</li>
+<li><b>Build:</b> Perform a <b>"Clean and Build"</b> to ensure the new Ticket persistence logic and UI assets are correctly compiled.</li>
 </ul>
 
 <hr>
-<p align="center"><em>This project is maintained by SunnyEljohn and Group 28. Version 1.4.2 focuses on professional role segregation and system-wide support.</em></p>
+<p align="center"><em>This project is maintained by SunnyEljohn and Group 28. Version 1.4.4 focuses on UI consistency and data persistence.</em></p>

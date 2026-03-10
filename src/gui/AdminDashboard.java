@@ -134,8 +134,9 @@ public class AdminDashboard extends JFrame {
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         actionPanel.setOpaque(false);
 
-        JButton updateBtn  = makeActionBtn("✅ Update Status", new Color(56, 142, 60));
-        JButton refreshBtn = makeActionBtn("↻ Refresh",        new Color(30, 144, 255));
+       JButton submitBtn  = makeActionBtn("+ Submit Ticket",  new Color(33, 150, 243));
+       JButton updateBtn  = makeActionBtn("✅ Update Status", new Color(56, 142, 60));
+       JButton refreshBtn = makeActionBtn("↻ Refresh",        new Color(30, 144, 255));
 
         updateBtn.addActionListener(e -> {
             int row = table.getSelectedRow();
@@ -158,8 +159,10 @@ public class AdminDashboard extends JFrame {
             }
         });
 
+        submitBtn.addActionListener(e -> openSubmitTicketDialog());
         refreshBtn.addActionListener(e -> refreshTicketTable());
 
+        actionPanel.add(submitBtn);
         actionPanel.add(updateBtn);
         actionPanel.add(refreshBtn);
 
@@ -179,6 +182,78 @@ public class AdminDashboard extends JFrame {
             });
         }
     }
+    
+    private void openSubmitTicketDialog() {
+    JDialog dialog = new JDialog(this, "Submit IT Support Ticket", true);
+    dialog.setSize(450, 320);
+    dialog.setLocationRelativeTo(this);
+    dialog.setLayout(new BorderLayout());
+
+    JPanel form = new JPanel(new GridBagLayout());
+    form.setBackground(Color.WHITE);
+    form.setBorder(new EmptyBorder(20, 25, 10, 25));
+    GridBagConstraints gc = new GridBagConstraints();
+    gc.insets = new Insets(8, 6, 8, 6);
+    gc.anchor = GridBagConstraints.WEST;
+    gc.fill   = GridBagConstraints.HORIZONTAL;
+
+    JTextField senderField    = new JTextField(20);
+    JComboBox<String> typeBox = new JComboBox<>(new String[]{
+        "Hardware", "Software", "Network", "Account Access", "Other"
+    });
+    JTextField subjectField   = new JTextField(20);
+    JTextArea  descArea       = new JTextArea(3, 20);
+    descArea.setLineWrap(true);
+    descArea.setWrapStyleWord(true);
+
+    Object[][] rows = {
+        {"Reported By *",  senderField},
+        {"Category *",     typeBox},
+        {"Subject *",      subjectField},
+        {"Description",    new JScrollPane(descArea)}
+    };
+    for (int i = 0; i < rows.length; i++) {
+        gc.gridx = 0; gc.gridy = i; gc.weightx = 0;
+        form.add(new JLabel((String) rows[i][0]), gc);
+        gc.gridx = 1; gc.weightx = 1;
+        form.add((Component) rows[i][1], gc);
+    }
+
+    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    btnPanel.setBackground(Color.WHITE);
+    JButton submitBtn = makeActionBtn("Submit",  new Color(33, 150, 243));
+    JButton cancelBtn = makeActionBtn("Cancel",  new Color(150, 150, 150));
+    cancelBtn.addActionListener(e -> dialog.dispose());
+
+    submitBtn.addActionListener(e -> {
+        String sender      = senderField.getText().trim();
+        String category    = (String) typeBox.getSelectedItem();
+        String subject     = subjectField.getText().trim();
+        String description = descArea.getText().trim();
+
+        if (sender.isEmpty() || subject.isEmpty()) {
+            JOptionPane.showMessageDialog(dialog, "Reported By and Subject are required.",
+                    "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        dao.TicketDAO dao = new dao.TicketDAO();
+        if (dao.submitTicket(sender, category, subject, description)) {
+            refreshTicketTable();
+            JOptionPane.showMessageDialog(dialog, "Ticket submitted successfully!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            dialog.dispose();
+        } else {
+            JOptionPane.showMessageDialog(dialog, "Failed to submit ticket.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    });
+
+    btnPanel.add(submitBtn);
+    btnPanel.add(cancelBtn);
+    dialog.add(form,     BorderLayout.CENTER);
+    dialog.add(btnPanel, BorderLayout.SOUTH);
+    dialog.setVisible(true);
+}
 
     // ════════════════════════════════════════════════════════════════════════
     //  Sidebar

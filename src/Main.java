@@ -9,7 +9,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 public class Main {
     public static void main(String[] args) {
-
         // Attempt to set the look and feel to Nimbus (a modern Swing UI theme)
         try {
             javax.swing.UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");

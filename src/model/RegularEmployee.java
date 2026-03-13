@@ -2,9 +2,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-/**
- * MotorPH Regular Employee Subclass
- */
 package model;
 
 /**
@@ -12,12 +9,13 @@ package model;
  */
 public class RegularEmployee extends Employee {
 
-    public RegularEmployee(String employeeID, String lastName, String firstName, 
-                           double basicSalary, double semiMonthlyRate, 
-                           double hourlyRate, double totalBenefits) {
-        
-        super(employeeID, lastName, firstName, basicSalary, semiMonthlyRate, hourlyRate, totalBenefits);
-    }
+    public RegularEmployee(String employeeID, String lastName, String firstName,
+                       String sss, String philhealth, String tin, String pagibig,
+                       double basicSalary, double semiMonthlyRate,
+                       double hourlyRate, double totalBenefits) {
+    super(employeeID, lastName, firstName, sss, philhealth, tin, pagibig,
+          basicSalary, semiMonthlyRate, hourlyRate, totalBenefits);
+}
     
     // Regular employees get basic salary + fixed benefits
     // Adding this to satisfy the Employee abstract class if it still uses calculateGross
@@ -25,5 +23,10 @@ public class RegularEmployee extends Employee {
     public double calculateGrossPay() {
         // Regular employees get basic salary + fixed benefits
         return getBasicSalary() + getTotalBenefits();
+    }
+    
+    @Override
+    public String getEmployeeType() {
+         return "Regular"; // ✅ Correct!
     }
 }
